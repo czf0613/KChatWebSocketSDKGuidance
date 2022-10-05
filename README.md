@@ -1,2 +1,5 @@
-# KChatWebSocketSDK
-Down-graded SDK for common JavaScript Runtime
+# KChatWebSocketSDKGuidance
+KChat的底层实现为http2，是一项比较新的技术，因此在很多平台上都有限制，例如：网页、小程序、旧版Windows等等不兼容新http协议的运行时。
+本仓库放入的是KChatService的Websocket实现，主体实现语言是Golang。通信协议为http1与Websocket，几乎能兼容市面上所有的设备。
+
+以下的是KChatServiceHttp的接口文档，对应平台只需调用相关接口文档即可使用KChat服务。
