@@ -1,0 +1,23 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ChatService.MQ";
+
+package service.mq;
+
+/*
+rabbitmq投送给consumer的消息是定义在这里的
+被二进制化了，所以需要用protobuf反序列化一下
+*/
+message MessageDto {
+	MessageType messageType = 1;
+	string messageGuid = 2;
+	string receiverGuid = 3;
+}
+
+/*
+这个表示消息类型
+目前只支持了点对点的单人聊天功能，因此这个enum只有一个值，以后会加
+*/
+enum MessageType {
+	C2CMessage = 0;
+}
