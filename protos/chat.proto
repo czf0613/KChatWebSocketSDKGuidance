@@ -5,15 +5,10 @@ option csharp_namespace = "ChatService.Chat";
 package service.chat;
 
 service ChattingService {
-	/*
-	根据时间查询跟“userUid”有关的聊天记录
-	包括他发送的，他收到的各种聊天记录
-	这个接口的maxLength默认是500条，也不需要实现分页的查询
-	客户端调用的时候，自行按照时间进行分片即可，这就一定程度上实现分页了
-	*/
+	// 这个方法暂时是残的，只能定向返回C2C的聊天数据，日后会丰富它的查询条件
 	rpc syncChatRecord (SyncChatRecordRequest) returns (SyncChatRecordReply);
 	
-	// 无需成为好友都可以发送，这个是最简单的接口
+	// 无需成为好友都可以发送
 	rpc sendAnyC2CMessage (C2CChatMessage) returns (SendReply);
 
 	// 以stream的方式订阅消息推送流，日后还会推出基于ws的推送以适配更多的设备
@@ -25,8 +20,9 @@ message SyncChatRecordRequest {
 	string fromTime = 2;
 	string toTime = 3;
 
+	// 4, 5还没有实现，给了也没用，目前会截断100条数据
 	uint32 maxLength = 4;
-	// uint32 page = 5;
+	uint32 page = 5;
 }
 
 message SyncChatRecordReply {
@@ -43,7 +39,7 @@ message C2CChatMessage {
 	string receiverUserUid = 3;
 
 	// 当发送消息时，4, 5, 6字段不填，主要是为了复用
-	// 6暂时还没实现
+	// 6还没实现
 	string messageUid = 4;
 	string messageSendTime = 5;
 	DeliveryState deliveryState = 6;
@@ -51,14 +47,19 @@ message C2CChatMessage {
 	// 框架会将聊天消息一视同仁为二进制，客户端自行处理解码与编码的问题
 	// 不要太大，会带来很多性能问题
 	// 如果需要发送图片、视频、音频、文件等等，请先上传至OSS，再将链接进行发送，请勿直接发二进制文件
-	// 在http json api中，这个字段用base64实现，并且要限制一下大小
 	bytes content = 7;
 
 	// 当这条消息被成功发出的时候，我们的服务器会向这个地址发送一条请求用于通知
 	// 客户的服务器接到该请求之后，可以向手机厂商申请第三方推送，因为框架无法触及物理设备的推送通知
 	// 也可以对消息内容进行留底
-	// 消息格式见文档
 	string notificationUrl = 8;
+
+	// 补丁1，因为有一些客户的原因，并没有把userTag和userId保存进去自己的系统，就会导致一些不方便
+	// （没错，说的就是我们自己
+	// 所以这里把客户的userTag也返回来了，让客户不再需要改造自己的系统就可以接入
+	// 同样的道理，发送消息时，这两个值不需要手动填，服务端会自动处理
+	string senderUserTag = 9;
+	string receiverUserTag = 10;
 }
 
 enum DeliveryState {
@@ -76,7 +77,7 @@ message SendReply {
 }
 
 message ChatMessageWrapper {
-	// 推送的消息可能有很多种，例如个人消息、群组消息、服务器下发消息等等，目前暂时只有一种
+	// 以后要补充例如好友申请、服务器下发消息等等
 	oneof content {
 		C2CChatMessage c2cMessage = 1;
 	}
